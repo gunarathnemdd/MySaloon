@@ -1,0 +1,20 @@
+{
+    "admin": [
+        {
+            "abcd": {
+                "id": "1",
+                "name": "Dhanuka fg",
+                "address": "1/2, street 1, city",
+                "email": "hjhjj@jkjkj.com",
+                "contactNo": "0254856925",
+                "category": "",
+                "city": "",
+                "clientType": "Unisex",
+                "locationMap": "need to be in map",
+                "website": "www.com",
+                "socialMedia": "facebook account",
+                "policies": "need to present in ontime"
+            }
+        }
+    ]
+}

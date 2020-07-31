@@ -1,0 +1,12 @@
+{
+  "name": "my-saloon",
+  "displayName": "my-saloon",
+  "expo": {
+    "name": "my-saloon",
+    "slug": "my-saloon",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
