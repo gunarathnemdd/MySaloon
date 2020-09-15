@@ -25,7 +25,7 @@ import WorkingHour from './admin/workingHour';
 import AdminProfile from './admin/adminProfile';
 import Staff from './admin/staff/staff';
 import StaffDetails from './admin/staff/staffDetails';
-import AddNewStaffMember from './admin/staff/addNewStaffMember';
+import Services from './admin/services/services';
 
 import { UserHome } from './user/userHome';
 import CustomUserDrawer from './user/userDrawer';
@@ -61,6 +61,7 @@ const StaffStack = createStackNavigator();
 const SearchStack = createStackNavigator();
 const AdminWorkingHourStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
+const ServicesStack = createStackNavigator();
 
 const UserHomeStack = createStackNavigator();
 
@@ -91,10 +92,6 @@ const StaffStackScreen = () => (
                 title: route.params.data.name
             })}
         />
-        <StaffStack.Screen
-            name="Add Staff Member"
-            component={AddNewStaffMember}
-        />
     </StaffStack.Navigator>
 );
 
@@ -117,6 +114,12 @@ const ProfileStackScreen = () => (
     </ProfileStack.Navigator>
 );
 
+const ServicesStackScreen = () => (
+    <ServicesStack.Navigator>
+        <ServicesStack.Screen name="Services" component={Services} />
+    </ServicesStack.Navigator>
+)
+
 const TabsScreen = () => (
     <Tabs.Navigator>
         <Tabs.Screen name="Home" component={HomeStackScreen} />
@@ -131,6 +134,7 @@ const AdminDrawerScreen = () => (
         <AdminDrawer.Screen name="Profile" component={ProfileStackScreen} />
         <AdminDrawer.Screen name="WorkingHour" component={WorkingHourStackScreen} />
         <AdminDrawer.Screen name="Staff" component={StaffStackScreen} />
+        <AdminDrawer.Screen name="Services" component={ServicesStackScreen} />
     </AdminDrawer.Navigator>
 );
 

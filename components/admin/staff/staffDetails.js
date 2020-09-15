@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TextInput, StyleSheet, Picker, Button, FlatList, CheckBox, TouchableWithoutFeedback, StatusBar, Modal, Keyboard, ActivityIndicator, Image } from "react-native";
+import { View, ScrollView, Text, TextInput, StyleSheet, Picker, Button, FlatList, CheckBox, TouchableWithoutFeedback, StatusBar, Modal, Keyboard, ActivityIndicator, Image, DatePickerIOSBase } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Avatar } from 'react-native-elements';
-
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Formik } from 'formik';
+import { setStatusBarBackgroundColor } from "expo-status-bar";
 
 const ScreenContainer = ({ children }) => (
     <View style={styles.container}>{children}</View>
@@ -22,11 +22,11 @@ export default function StaffDetails({ route, navigation }) {
         gender: '',
         type: '',
         idNo: '',
-        joinDate: '',
-        resignDate: '',
+        joinDate: Date.now(),
+        resignDate: Date.now(),
         currentEmployee: true,
         services: '',
-        image: ''
+        image: 'unknown'
     });
 
     const [alertData, setModalVisible] = useState({
@@ -37,16 +37,32 @@ export default function StaffDetails({ route, navigation }) {
     const [edit, editProfile] = useState(false);
     const [loading, setLoader] = useState(false);
     const [position, setPosition] = useState(null);
+    const [addNewMember, setAddNewMember] = useState(false);
     const [image, setImage] = useState(null);
     const [date, setDate] = useState({ joinDate: null, resignDate: null });
     const [timeModal, setTimeModal] = useState({ joinTime: false, resignTime: false });
-    const [month, setMonth] = useState(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
+    const [month, setMonth] = useState(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]);
+    const [btnIcn, setBtnIcn] = useState({
+        button: 'Update',
+        icon: 'account-check'
+    })
 
     useEffect(() => {
-        const routeParams = route.params;
-        setPosition(routeParams.position)
-        setLoader(true)
-        getProfileData(route.params.data)
+        setLoader(true);
+        console.log('hghghg', profile.name[0])
+        if (route.params.addNewMember) {
+            setAddNewMember(route.params.addNewMember);
+            editProfile(true);
+            setLoader(false);
+            setBtnIcn({
+                button: 'Add',
+                icon: 'account-plus'
+            })
+        }
+        else {
+            setPosition(route.params.position);
+            getProfileData(route.params.data);
+        }
     }, []);
 
     const getProfileData = async (data) => {
@@ -72,6 +88,54 @@ export default function StaffDetails({ route, navigation }) {
         let lastDate = new Date(data.resignDate) //.toString();
         let resignDate = lastDate.getFullYear() + ' ' + month[lastDate.getMonth()] + ' ' + lastDate.getDate();
         setDate({ joinDate: joinDate, resignDate: resignDate });
+    }
+
+    const addNewProfile = async (values) => {
+        let userToken = await AsyncStorage.getItem('userToken');
+        let imageUri = image ? `data:image/png;base64,${image.base64}` : null;
+        fetch('https://firebasestorage.googleapis.com/v0/b/test-9cd65.appspot.com/o/staff.json?alt=media&token=8304b318-8f20-449a-b907-cb3dbc9c0290')
+            .then((response) => response.json())
+            .then((json) => {
+                let oldStaffData = [];
+                let newStaffData = [];
+                oldStaffData = json;
+                let id = Object.keys(oldStaffData.staff[0][userToken]).length + 1;
+                oldStaffData.staff[0][userToken].push({
+                    "id": id,
+                    "name": values.name,
+                    "address": values.address,
+                    "email": values.email,
+                    "contactNo": values.contactNo,
+                    "gender": values.gender,
+                    "type": values.type,
+                    "idNo": values.idNo,
+                    "joinDate": values.joinDate,
+                    "resignDate": values.resignDate,
+                    "currentEmployee": values.currentEmployee,
+                    "services": values.services,
+                    "image": values.image
+                });
+                newStaffData = JSON.stringify(oldStaffData);
+                fetch('https://firebasestorage.googleapis.com/v0/b/test-9cd65.appspot.com/o/staff.json?alt=media&token=8304b318-8f20-449a-b907-cb3dbc9c0290', {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: newStaffData
+                }).then((response) => response.json())
+                    .then((json) => {
+                        setLoader(false);
+                        setBtnIcn({
+                            button: 'Update',
+                            icon: 'account-check'
+                        })
+                        //getProfileData(values);
+                        navigation.popToTop()
+                    })
+                    .catch((error) => console.error(error));
+            })
+            .catch((error) => console.error(error))
     }
 
     const updateProfile = async (values) => {
@@ -138,15 +202,6 @@ export default function StaffDetails({ route, navigation }) {
         }
     };
 
-    const pickJoinDate = async (event, date, handleChange) => {
-        try {
-            handleChange(new Date(date));
-            setTimeModal(false);
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
     return (
         <ScreenContainer>
             {loading ? <ActivityIndicator animating={loading} size="large" color="#2196F3" /> : !edit ? <ScrollView><View style={{ alignItems: "center", marginVertical: 2, paddingVertical: 10 }}>
@@ -198,10 +253,6 @@ export default function StaffDetails({ route, navigation }) {
                     <Text>Services</Text>
                     <Text>{profile.services}</Text>
                 </View>
-                {/* <View style={styles.profileList}>
-                    <Text>Image</Text>
-                    <Text>{profile.image}</Text>
-                </View> */}
 
                 <TouchableWithoutFeedback onPress={() => editProfile(true)}>
                     <View style={styles.button}>
@@ -231,12 +282,21 @@ export default function StaffDetails({ route, navigation }) {
                         image: profile.image
                     }}
                     onSubmit={(values, actions) => {
+                        //setLoader(false);
                         if (values.name.trim().length == 0 || values.address.trim().length == 0 || values.email.trim().length == 0 || values.contactNo.trim().length == 0 || values.gender.trim().length == 0 || values.type.trim().length == 0 || values.idNo.trim().length == 0) {
                             setLoader(false);
                             setModalVisible({
                                 visible: true,
                                 heading: 'Sorry!',
                                 message: 'All fields are mandatory except Join Date, Resign Date, Services and Image.'
+                            });
+                        }
+                        else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email.trim())) {
+                            setLoader(false);
+                            setModalVisible({
+                                visible: true,
+                                heading: 'Sorry!',
+                                message: 'Email format is wrong.'
                             });
                         }
                         else if (new Date(values.resignDate) < new Date(values.joinDate)) {
@@ -248,9 +308,16 @@ export default function StaffDetails({ route, navigation }) {
                             });
                         }
                         else {
-                            actions.resetForm();
-                            editProfile(false);
-                            updateProfile(values);
+                            if (addNewMember) {
+                                actions.resetForm();
+                                //editProfile(false);
+                                addNewProfile(values)
+                            }
+                            else {
+                                actions.resetForm();
+                                editProfile(false);
+                                updateProfile(values);
+                            }
                         }
                     }}
                 >
@@ -396,15 +463,15 @@ export default function StaffDetails({ route, navigation }) {
                                         onPress={() => props.setFieldValue('currentEmployee', !props.values.currentEmployee)}
                                     /> */}
                                     <View style={{ flexDirection: "row" }}>
-                                    <CheckBox
-                                        value={props.values.currentEmployee}
-                                        onValueChange={() => props.setFieldValue('currentEmployee', !props.values.currentEmployee)}
-                                        style={styles.checkbox}
-                                    />
-                                    <Text style={styles.checkbox}>Current employee</Text>
+                                        <CheckBox
+                                            value={props.values.currentEmployee}
+                                            onValueChange={() => props.setFieldValue('currentEmployee', !props.values.currentEmployee)}
+                                            style={styles.checkbox}
+                                        />
+                                        <Text style={styles.checkbox}>Current employee</Text>
                                     </View>
-                                    {props.values.currentEmployee ? <Text style={{...styles.textInput, textDecorationLine: "line-through"}}>{new Date(props.values.resignDate).getFullYear() + ' ' + month[new Date(props.values.resignDate).getMonth()] + ' ' + new Date(props.values.resignDate).getDate()}</Text> :
-                                    <Text style={styles.textInput} onPress={() => setTimeModal({ ...timeModal, resignTime: true })}>{new Date(props.values.resignDate).getFullYear() + ' ' + month[new Date(props.values.resignDate).getMonth()] + ' ' + new Date(props.values.resignDate).getDate()}</Text>}
+                                    {props.values.currentEmployee ? <Text style={{ ...styles.textInput, textDecorationLine: "line-through" }}>{new Date(props.values.resignDate).getFullYear() + ' ' + month[new Date(props.values.resignDate).getMonth()] + ' ' + new Date(props.values.resignDate).getDate()}</Text> :
+                                        <Text style={styles.textInput} onPress={() => setTimeModal({ ...timeModal, resignTime: true })}>{new Date(props.values.resignDate).getFullYear() + ' ' + month[new Date(props.values.resignDate).getMonth()] + ' ' + new Date(props.values.resignDate).getDate()}</Text>}
                                 </View>
                                 {timeModal.resignTime ? <DateTimePicker
                                     testID="dateTimePicker"
@@ -425,8 +492,8 @@ export default function StaffDetails({ route, navigation }) {
                                 />
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                                <TouchableWithoutFeedback onPress={() => { editProfile(false) }}>
-                                    <View style={{ ...styles.button, paddingHorizontal: 15 }}>
+                                <TouchableWithoutFeedback onPress={() => { addNewMember ? navigation.push("Staff") : editProfile(false) }}>
+                                    <View style={{ ...styles.button, width: '40%' }}>
                                         <Text style={styles.buttonText}>Cancel</Text>
                                         <MaterialCommunityIcons
                                             name="close"
@@ -438,10 +505,10 @@ export default function StaffDetails({ route, navigation }) {
                                 </TouchableWithoutFeedback>
 
                                 <TouchableWithoutFeedback onPress={() => { setLoader(true), props.handleSubmit() }}>
-                                    <View style={{ ...styles.button, paddingHorizontal: 15 }}>
-                                        <Text style={styles.buttonText}>Update</Text>
+                                    <View style={{ ...styles.button, width: '40%' }}>
+                                        <Text style={styles.buttonText}>{btnIcn.button}</Text>
                                         <MaterialCommunityIcons
-                                            name="account-check"
+                                            name={btnIcn.icon}
                                             color="#05375a"
                                             size={25}
                                             style={{ marginHorizontal: 10, color: 'white' }}
@@ -526,6 +593,12 @@ const styles = StyleSheet.create({
     },
     item: {
         fontSize: 15
+    },
+    tags: {
+        padding: 5,
+        backgroundColor: "lightblue",
+        marginHorizontal: 5,
+        borderRadius: 10
     },
     modalView: {
         margin: 20,

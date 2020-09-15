@@ -11,7 +11,7 @@ const ScreenContainer = ({ children }) => (
     <View style={styles.container}>{children}</View>
 );
 
-export default function Staff({ navigation }) {
+export default function Services({ navigation }) {
 
     const [profile, setProfile] = useState({
         name: '',

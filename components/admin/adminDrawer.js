@@ -108,13 +108,13 @@ export default function CustomAdminDrawer(props) {
                         <DrawerItem 
                             icon={({color, size}) => (
                                 <Icon 
-                                name="account-check-outline" 
+                                name="briefcase-outline" 
                                 color={color}
                                 size={size}
                                 />
                             )}
-                            label="Support"
-                            onPress={() => {props.navigation.navigate('SupportScreen')}}
+                            label="Services"
+                            onPress={() => {props.navigation.navigate('Services')}}
                         />
                     </Drawer.Section>
                 </View>
